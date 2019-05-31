@@ -1,0 +1,6 @@
+output.tmp
+__pycache__
+.vscode/
+._*.html
+.AppleDouble/
+test*.py
