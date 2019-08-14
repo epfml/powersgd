@@ -10,7 +10,7 @@ If you use this code, please cite the following [paper](https://arxiv.org/abs/19
 
     @inproceedings{vkj2019powerSGD,
       author = {Thijs Vogels, Sai Praneeth Karimireddy, Martin Jaggi},
-      title = "{PowerSGD: Practical Low-Rank Gradient Compression for Distributed Optimization}",
+      title = "{{PowerSGD}: Practical Low-Rank Gradient Compression for Distributed Optimization}",
       booktitle = {arXiv},
       year = 2019,
       url = {https://arxiv.org/abs/1905.13727}
