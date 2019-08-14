@@ -9,7 +9,7 @@ We study gradient compression methods to alleviate the communication bottleneck 
 If you use this code, please cite the following [paper](https://arxiv.org/abs/1905.13727)
 
     @inproceedings{vkj2019powerSGD,
-      author = {Thijs Vogels, Sai Praneeth Karimireddy, Martin Jaggi},
+      author = {Vogels, Thijs and Karimireddy, Sai Praneeth and Jaggi, Martin},
       title = "{{PowerSGD}: Practical Low-Rank Gradient Compression for Distributed Optimization}",
       booktitle = {arXiv},
       year = 2019,
