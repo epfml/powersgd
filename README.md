@@ -11,7 +11,7 @@ If you use this code, please cite the following [paper](https://arxiv.org/abs/19
     @inproceedings{vkj2019powerSGD,
       author = {Vogels, Thijs and Karimireddy, Sai Praneeth and Jaggi, Martin},
       title = "{{PowerSGD}: Practical Low-Rank Gradient Compression for Distributed Optimization}",
-      booktitle = {arXiv},
+      booktitle = {NeurIPS 2019 - Advances in Neural Information Processing Systems},
       year = 2019,
       url = {https://arxiv.org/abs/1905.13727}
     }
