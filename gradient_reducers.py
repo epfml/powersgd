@@ -228,7 +228,7 @@ class TopKReducer(Reducer):
             flatgrad_size = 0
             tensor_idx = [0]
             for tensor in grad_in:
-                top_size = max(1, int(0.5 * self.rank * tensor.nelement()))
+                top_size = max(1, int(0.5 * self.compression * tensor.nelement()))
                 flatgrad_size += top_size
                 tensor_idx.append(tensor_idx[-1] + top_size)
             flatgrad_start_idx = tensor_idx[:-1]
