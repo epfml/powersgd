@@ -72,23 +72,26 @@ def optimizer_config(reducer):
     match = re.match("Rank (\d+) \(EF\)", reducer)
     if match:
         rank = int(match.group(1))
-        if rank == 1:
-            return {
-                "optimizer_reducer_n_power_iterations": 0,
-                "optimizer_reducer_reuse_query": True,
-                "optimizer_memory": True,
-                "optimizer_reducer": "FasterRank1Reducer",
-                "reducer_name": reducer,
-            }
-        else:
-            return {
-                "optimizer_reducer_n_power_iterations": 0,
-                "optimizer_reducer_reuse_query": True,
-                "optimizer_reducer_rank": rank,
-                "optimizer_memory": True,
-                "optimizer_reducer": "RankKReducer",
-                "reducer_name": reducer,
-            }
+        return {
+            "optimizer_reducer_n_power_iterations": 0,
+            "optimizer_reducer_reuse_query": True,
+            "optimizer_reducer_rank": rank,
+            "optimizer_memory": True,
+            "optimizer_reducer": "RankKReducer",
+            "reducer_name": reducer,
+        }
+
+    match = re.match("Shuffled rank (\d+) \(EF\)", reducer)
+    if match:
+        rank = int(match.group(1))
+        return {
+            "optimizer_reducer_n_power_iterations": 0,
+            "optimizer_reducer_reuse_query": True,
+            "optimizer_reducer_rank": rank,
+            "optimizer_memory": True,
+            "optimizer_reducer": "ShuffledRankKReducer",
+            "reducer_name": reducer,
+        }
 
     match = re.match("HQ Rank (\d+) w/o reuse \(EF\)", reducer)
     if match:
