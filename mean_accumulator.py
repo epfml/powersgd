@@ -71,7 +71,7 @@ class MeanAccumulator:
         if isinstance(self.average, torch.Tensor):
             self.average = self.average.float()
             self.average.mul_(1.0 - alpha)
-            self.average.add_(alpha, value)
+            self.average.add_(value, alpha=alpha)
         elif isinstance(self.average, float):
             self.average *= 1.0 - alpha
             self.average += alpha * value
@@ -88,7 +88,7 @@ class MeanAccumulator:
             self.average = []
             for v in value:
                 acc = MeanAccumulator()
-                acc.add(value[key], weight)
+                acc.add(v, weight)
                 self.average.append(acc)
         else:
             self.average = deepcopy(value)
