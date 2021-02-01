@@ -40,13 +40,13 @@ config = dict(
     optimizer_decay_at_epochs=[150, 250],
     optimizer_decay_with_factor=10.0,
     optimizer_learning_rate=0.1,  # Tuned for batch size 128 (single worker)
-    optimizer_memory=False,
+    optimizer_memory=True,
     optimizer_momentum_type="nesterov",
     optimizer_momentum=0.9,
     optimizer_reducer="ExactReducer",
     # optimizer_reducer_compression=0.01,
     # optimizer_reducer_rank=4,
-    # optimizer_reducer_reuse_query=True,
+    optimizer_reducer_reuse_query=True,
     # optimizer_reducer_n_power_iterations=0,
     optimizer_scale_lr_with_factor=None,  # set to override world_size as a factor
     optimizer_scale_lr_with_warmup_epochs=5,  # scale lr by world size
@@ -146,7 +146,7 @@ def main():
                     with timer("batch.weight_decay", epoch_frac, verbosity=2):
                         for grad, param, wd in zip(grads, task.state, wds):
                             if wd > 0:
-                                grad.add_(wd, param.detach())
+                                grad.add_(param.detach(), alpha=wd)
 
                 if config["optimizer_mom_before_reduce"]:
                     with timer("batch.momentum", epoch_frac, verbosity=2):
@@ -159,7 +159,7 @@ def main():
                                     == "exponential_moving_average"
                                 ):
                                     momentum.mul_(config["optimizer_momentum"]).add_(
-                                        1 - config["optimizer_momentum"], grad
+                                        grad, alpha=1 - config["optimizer_momentum"]
                                     )
                                 else:
                                     momentum.mul_(config["optimizer_momentum"]).add_(grad)
@@ -194,7 +194,7 @@ def main():
                     with timer("batch.wd", epoch_frac, verbosity=2):
                         for grad, param, wd in zip(grads, task.state, wds):
                             if wd > 0:
-                                grad.add_(wd, param.detach())
+                                grad.add_(param.detach(), alpha=wd)
 
                 if not config["optimizer_mom_before_reduce"]:
                     with timer("batch.mom", epoch_frac, verbosity=2):
@@ -207,7 +207,7 @@ def main():
                                     == "exponential_moving_average"
                                 ):
                                     momentum.mul_(config["optimizer_momentum"]).add_(
-                                        1 - config["optimizer_momentum"], grad
+                                        grad, alpha=1 - config["optimizer_momentum"]
                                     )
                                 else:
                                     momentum.mul_(config["optimizer_momentum"]).add_(grad)
@@ -215,7 +215,7 @@ def main():
 
                 with timer("batch.step", epoch_frac, verbosity=2):
                     for param, grad, lr in zip(task.state, grads, lrs):
-                        param.data.add_(-lr, grad)
+                        param.data.add_(grad, alpha=-lr)
 
                 if config["fix_conv_weight_norm"]:
                     with timer("batch.normfix", epoch_frac, verbosity=2):
@@ -249,12 +249,12 @@ def main():
             for key, value in epoch_metrics.value().items():
                 metric(
                     key,
-                    {"value": value, "epoch": epoch + 1.0, "bits": bits_communicated},
+                    {"value": value.item(), "epoch": epoch + 1.0, "bits": bits_communicated},
                     tags={"split": "train"},
                 )
                 metric(
                     f"last_{key}",
-                    {"value": value, "epoch": epoch + 1.0, "bits": bits_communicated},
+                    {"value": value.item(), "epoch": epoch + 1.0, "bits": bits_communicated},
                     tags={"split": "train"},
                 )
 
@@ -263,7 +263,7 @@ def main():
             for key, value in test_stats.items():
                 metric(
                     f"last_{key}",
-                    {"value": value, "epoch": epoch + 1.0, "bits": bits_communicated},
+                    {"value": value.item(), "epoch": epoch + 1.0, "bits": bits_communicated},
                     tags={"split": "test"},
                 )
 
@@ -272,7 +272,7 @@ def main():
             for key, value in test_stats.items():
                 metric(
                     f"runavg_{key}",
-                    {"value": value, "epoch": epoch + 1.0, "bits": bits_communicated},
+                    {"value": value.item(), "epoch": epoch + 1.0, "bits": bits_communicated},
                     tags={"split": "test"},
                 )
 
