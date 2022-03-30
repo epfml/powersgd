@@ -1,0 +1,21 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+exclude = '''
+/(
+    paper-code
+    | __pycache__
+    | \.git
+    | \.vscode
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
