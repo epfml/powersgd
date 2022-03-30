@@ -20,6 +20,15 @@ class Aggregator(ABC):
         pass
 
 
+class AllReduce(Aggregator):
+    def aggregate(self, gradients: list[torch.Tensor]) -> list[torch.Tensor]:
+        allreduce_average(gradients)
+        out = [g.clone() for g in gradients]
+        for g in gradients:
+            g.zero_()
+        return out
+
+
 class Config(NamedTuple):
     rank: int  # lower rank => more aggressive compression
     min_compression_rate: float = 2  # don't compress gradients with less compression
@@ -97,20 +106,6 @@ class AdaptivePowerSGD(Aggregator):
 class BasicConfig(NamedTuple):
     rank: int  # lower rank => more aggressive compression
     num_iters_per_step: int = 1  # lower number => more aggressive compression
-
-
-def avg_compressed_size(shape: torch.Size, config: Union[Config, BasicConfig]) -> float:
-    rank = min(config.rank, min(shape))
-    return 0.5 * config.num_iters_per_step * rank * sum(shape)
-
-
-class AllReduce(Aggregator):
-    def aggregate(self, gradients: list[torch.Tensor]) -> list[torch.Tensor]:
-        allreduce_average(gradients)
-        out = [g.clone() for g in gradients]
-        for g in gradients:
-            g.zero_()
-        return out
 
 
 class PowerSGD(Aggregator):
@@ -271,3 +266,8 @@ def view_as_matrix(tensor: torch.Tensor):
     For a convolutional layer, this groups all "kernel" dimensions with "input features".
     """
     return tensor.view(tensor.shape[0], -1)
+
+
+def avg_compressed_size(shape: torch.Size, config: Union[Config, BasicConfig]) -> float:
+    rank = min(config.rank, min(shape))
+    return 0.5 * config.num_iters_per_step * rank * sum(shape)
