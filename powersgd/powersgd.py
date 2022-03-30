@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from types import SimpleNamespace
 from typing import NamedTuple, Union
 
 import torch
@@ -30,20 +29,20 @@ class AllReduce(Aggregator):
         return out
 
 
-class AdaptivePowerSGDConfig(NamedTuple):
+class Config(NamedTuple):
     rank: int  # lower rank => more aggressive compression
-    min_compression_rate: float = 2  # don't compress gradients with less compression
+    min_compression_rate: float = 2  # skip compression on some gradients
     num_iters_per_step: int = 1  # lower number => more aggressive compression
     start_compressing_after_num_steps: int = 100
 
 
-class AdaptivePowerSGD(Aggregator):
+class PowerSGD(Aggregator):
     """
     Applies PowerSGD only after a configurable number of steps,
     and only on parameters with strong compression.
     """
 
-    def __init__(self, params: list[torch.Tensor], config: AdaptivePowerSGDConfig):
+    def __init__(self, params: list[torch.Tensor], config: Config):
         self.config = config
         self.device = list(params)[0].device
         self.is_compressed_mask = [self._should_compress(p.shape) for p in params]
@@ -51,9 +50,9 @@ class AdaptivePowerSGD(Aggregator):
         self.step_counter = 0
 
         compressed_params, _ = self._split(params)
-        self._powersgd = PowerSGD(
+        self._powersgd = BasicPowerSGD(
             compressed_params,
-            config=PowerSGDConfig(
+            config=BasicConfig(
                 rank=config.rank,
                 num_iters_per_step=config.num_iters_per_step,
             ),
@@ -104,13 +103,13 @@ class AdaptivePowerSGD(Aggregator):
         )
 
 
-class PowerSGDConfig(NamedTuple):
+class BasicConfig(NamedTuple):
     rank: int  # lower rank => more aggressive compression
     num_iters_per_step: int = 1  # lower number => more aggressive compression
 
 
-class PowerSGD(Aggregator):
-    def __init__(self, params: list[torch.Tensor], config: PowerSGDConfig):
+class BasicPowerSGD(Aggregator):
+    def __init__(self, params: list[torch.Tensor], config: BasicConfig):
         # Configuration
         self.config = config
         self.params = list(params)
@@ -269,8 +268,6 @@ def view_as_matrix(tensor: torch.Tensor):
     return tensor.view(tensor.shape[0], -1)
 
 
-def avg_compressed_size(
-    shape: torch.Size, config: Union[AdaptivePowerSGDConfig, PowerSGDConfig]
-) -> float:
+def avg_compressed_size(shape: torch.Size, config: Union[Config, BasicConfig]) -> float:
     rank = min(config.rank, min(shape))
     return 0.5 * config.num_iters_per_step * rank * sum(shape)

@@ -1,13 +1,13 @@
 import torch
-from .powersgd import AdaptivePowerSGD, Aggregator, AdaptivePowerSGDConfig
-from .utils import params_in_optimizer
-
-
-PowerSGD = AdaptivePowerSGD
-Config = AdaptivePowerSGDConfig
+from powersgd.powersgd import PowerSGD, Aggregator, Config
+from powersgd.utils import params_in_optimizer
 
 
 def optimizer_step(optimizer: torch.optim.Optimizer, aggregator: Aggregator):
+    """
+    Aggregate gradients across workers using `aggregator`,
+    and then take an optimizer step using the aggregated gradient.
+    """
     params = params_in_optimizer(optimizer)
     grads = [p.grad.data for p in params]  # type: ignore
     avg_grads = aggregator.aggregate(grads)  # subtracts the approximation from grads
