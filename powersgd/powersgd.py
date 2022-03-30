@@ -172,11 +172,11 @@ class PowerSGD(Aggregator):
             # Alternate between left and right matrix multiplications
             iter_is_even = (self.step_counter * num_iters_per_step + it) % 2 == 0
             if iter_is_even:
-                maybe_permute = lambda g: g.permute([0, 2, 1])
+                maybe_transpose = lambda g: g.permute([0, 2, 1])
                 out_batches, in_batches = self._qs, self._ps
                 out_buffer = self._qs_buffer
             else:
-                maybe_permute = lambda g: g
+                maybe_transpose = lambda g: g
                 out_batches, in_batches = self._ps, self._qs
                 out_buffer = self._ps_buffer
 
@@ -187,7 +187,7 @@ class PowerSGD(Aggregator):
                 orthogonalize(in_batch)
                 out_batch[:] = torch.einsum(
                     "bmn, bmr -> bnr",
-                    maybe_permute(group["grad_batch"]),
+                    maybe_transpose(group["grad_batch"]),
                     in_batch,
                 )
 
@@ -199,8 +199,8 @@ class PowerSGD(Aggregator):
                 shape_groups, out_batches, in_batches
             ):
                 iter_approx = torch.einsum("bnr, bmr -> bmn", out_batch, in_batch)
-                maybe_permute(group["grad_batch"]).sub_(iter_approx)  # error feedback
-                maybe_permute(group["approximation"]).add_(iter_approx)
+                maybe_transpose(group["grad_batch"]).sub_(iter_approx)  # error feedback
+                maybe_transpose(group["approximation"]).add_(iter_approx)
                 del iter_approx
 
         # Un-batch the approximation and error feedback, write to the output
