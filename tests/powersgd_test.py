@@ -2,8 +2,7 @@ import pytest
 import torch
 import torchvision
 
-from powersgd import PowerSGD, optimizer_step, Config
-from powersgd.powersgd import AllReduce
+from powersgd import PowerSGD, Config
 
 
 @pytest.fixture
@@ -55,4 +54,4 @@ def test_error_feedback_mechanism(model):
 
 
 if __name__ == "__main__":
-    test_error_feedback_mechanism()
+    test_error_feedback_mechanism(model())

@@ -1,5 +1,6 @@
 import torch
-from powersgd.powersgd import PowerSGD, Aggregator, Config
+
+from powersgd.powersgd import Aggregator, AllReduce, Config, PowerSGD
 from powersgd.utils import params_in_optimizer
 
 

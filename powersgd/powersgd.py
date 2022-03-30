@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import NamedTuple, Union
+from typing import Dict, List, NamedTuple, Union
 
 import torch
 
@@ -10,7 +10,7 @@ from powersgd.utils import allreduce_average, pack, unpack
 
 class Aggregator(ABC):
     @abstractmethod
-    def aggregate(self, gradients: list[torch.Tensor]) -> list[torch.Tensor]:
+    def aggregate(self, gradients: List[torch.Tensor]) -> List[torch.Tensor]:
         """
         Aggregates gradients across workers into an (approximate) average gradient.
         This method also changes its input gradients. It either sets them to zero if there is no compression,
@@ -20,7 +20,7 @@ class Aggregator(ABC):
 
 
 class AllReduce(Aggregator):
-    def aggregate(self, gradients: list[torch.Tensor]) -> list[torch.Tensor]:
+    def aggregate(self, gradients: List[torch.Tensor]) -> List[torch.Tensor]:
         buffer, shapes = pack(gradients)
         allreduce_average(gradients)
         out = unpack(buffer, shapes)
@@ -42,7 +42,7 @@ class PowerSGD(Aggregator):
     and only on parameters with strong compression.
     """
 
-    def __init__(self, params: list[torch.Tensor], config: Config):
+    def __init__(self, params: List[torch.Tensor], config: Config):
         self.config = config
         self.device = list(params)[0].device
         self.is_compressed_mask = [self._should_compress(p.shape) for p in params]
@@ -59,7 +59,7 @@ class PowerSGD(Aggregator):
         )
         self._allreduce = AllReduce()
 
-    def aggregate(self, gradients: list[torch.Tensor]) -> list[torch.Tensor]:
+    def aggregate(self, gradients: List[torch.Tensor]) -> List[torch.Tensor]:
         self.step_counter += 1
 
         if self.step_counter <= self.config.start_compressing_after_num_steps:
@@ -71,7 +71,7 @@ class PowerSGD(Aggregator):
             self._allreduce.aggregate(uncompressed_grads),
         )
 
-    def _split(self, params: list[torch.Tensor]):
+    def _split(self, params: List[torch.Tensor]):
         compressed_params = []
         uncompressed_params = []
         for param, is_compressed in zip(params, self.is_compressed_mask):
@@ -82,8 +82,8 @@ class PowerSGD(Aggregator):
         return compressed_params, uncompressed_params
 
     def _merge(
-        self, compressed: list[torch.Tensor], uncompressed: list[torch.Tensor]
-    ) -> list[torch.Tensor]:
+        self, compressed: List[torch.Tensor], uncompressed: List[torch.Tensor]
+    ) -> List[torch.Tensor]:
         assert len(compressed) + len(uncompressed) == len(self.is_compressed_mask)
         compressed_iter = iter(compressed)
         uncompressed_iter = iter(uncompressed)
@@ -109,7 +109,7 @@ class BasicConfig(NamedTuple):
 
 
 class BasicPowerSGD(Aggregator):
-    def __init__(self, params: list[torch.Tensor], config: BasicConfig):
+    def __init__(self, params: List[torch.Tensor], config: BasicConfig):
         # Configuration
         self.config = config
         self.params = list(params)
@@ -141,7 +141,7 @@ class BasicPowerSGD(Aggregator):
         )
         self._qs = unpack(self._qs_buffer, qs_shapes)
 
-    def aggregate(self, gradients: list[torch.Tensor]) -> list[torch.Tensor]:
+    def aggregate(self, gradients: List[torch.Tensor]) -> List[torch.Tensor]:
         """
         Create a low-rank approximation of the average gradients by communicating with other workers.
         Modifies its inputs so that they contain the 'approximation error', used for the error feedback
@@ -219,7 +219,7 @@ class BasicPowerSGD(Aggregator):
         return output_tensors
 
     def _init_p_batch(
-        self, shape: torch.Size, params: list[torch.Tensor]
+        self, shape: torch.Size, params: List[torch.Tensor]
     ) -> torch.Tensor:
         rank = min(self.config.rank, min(shape))
         return torch.randn(
@@ -227,7 +227,7 @@ class BasicPowerSGD(Aggregator):
         )
 
     def _init_q_batch(
-        self, shape: torch.Size, params: list[torch.Tensor]
+        self, shape: torch.Size, params: List[torch.Tensor]
     ) -> torch.Tensor:
         rank = min(self.config.rank, min(shape))
         return torch.randn(
@@ -237,8 +237,8 @@ class BasicPowerSGD(Aggregator):
     @classmethod
     def _matrices_per_shape(
         cls,
-        tensors: list[torch.Tensor],
-    ) -> dict[torch.Size, list[torch.Tensor]]:
+        tensors: List[torch.Tensor],
+    ) -> Dict[torch.Size, List[torch.Tensor]]:
         shape2tensors = defaultdict(list)
         for tensor in tensors:
             matrix = view_as_matrix(tensor)

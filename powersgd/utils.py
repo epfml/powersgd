@@ -1,15 +1,16 @@
+from typing import List, Tuple
 import torch
 from types import SimpleNamespace
 
 
-def pack(tensors):
+def pack(tensors: List[torch.Tensor]) -> Tuple[torch.Tensor, List[torch.Size]]:
     """Packs a list of tensors into one buffer for sending to other workers"""
     buffer = torch.cat([t.view(-1) for t in tensors])  # copies
     shapes = [tensor.shape for tensor in tensors]
     return buffer, shapes
 
 
-def unpack(buffer, shapes):
+def unpack(buffer: torch.Tensor, shapes: List[torch.Size]) -> List[torch.Tensor]:
     """Provides pointers to tensors of original `shapes` in a flat-packed buffer."""
     idx = 0
     entries = []
@@ -21,22 +22,18 @@ def unpack(buffer, shapes):
     return entries
 
 
-def num_bits(tensor):
-    return tensor.nelement() * 8 * tensor.element_size()
-
-
-def params_in_optimizer(optimizer: torch.optim.Optimizer) -> list[torch.Tensor]:
+def params_in_optimizer(optimizer: torch.optim.Optimizer) -> List[torch.Tensor]:
     params = []
     for group in optimizer.param_groups:
         params.extend(group["params"])
     return params
 
 
-def is_distributed():
+def is_distributed() -> bool:
     return torch.distributed.is_available() and torch.distributed.is_initialized()  # type: ignore
 
 
-def flatten(tensors: list[list[torch.Tensor]]) -> list[torch.Tensor]:
+def flatten(tensors: List[List[torch.Tensor]]) -> List[torch.Tensor]:
     out = []
     for list in tensors:
         out.extend(list)
