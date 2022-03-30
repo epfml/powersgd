@@ -30,7 +30,7 @@ class AllReduce(Aggregator):
         return out
 
 
-class Config(NamedTuple):
+class AdaptivePowerSGDConfig(NamedTuple):
     rank: int  # lower rank => more aggressive compression
     min_compression_rate: float = 2  # don't compress gradients with less compression
     num_iters_per_step: int = 1  # lower number => more aggressive compression
@@ -43,7 +43,7 @@ class AdaptivePowerSGD(Aggregator):
     and only on parameters with strong compression.
     """
 
-    def __init__(self, params: list[torch.Tensor], config: Config):
+    def __init__(self, params: list[torch.Tensor], config: AdaptivePowerSGDConfig):
         self.config = config
         self.device = list(params)[0].device
         self.is_compressed_mask = [self._should_compress(p.shape) for p in params]
@@ -53,7 +53,7 @@ class AdaptivePowerSGD(Aggregator):
         compressed_params, _ = self._split(params)
         self._powersgd = PowerSGD(
             compressed_params,
-            config=BasicConfig(
+            config=PowerSGDConfig(
                 rank=config.rank,
                 num_iters_per_step=config.num_iters_per_step,
             ),
@@ -104,13 +104,13 @@ class AdaptivePowerSGD(Aggregator):
         )
 
 
-class BasicConfig(NamedTuple):
+class PowerSGDConfig(NamedTuple):
     rank: int  # lower rank => more aggressive compression
     num_iters_per_step: int = 1  # lower number => more aggressive compression
 
 
 class PowerSGD(Aggregator):
-    def __init__(self, params: list[torch.Tensor], config: BasicConfig):
+    def __init__(self, params: list[torch.Tensor], config: PowerSGDConfig):
         # Configuration
         self.config = config
         self.params = list(params)
@@ -269,6 +269,8 @@ def view_as_matrix(tensor: torch.Tensor):
     return tensor.view(tensor.shape[0], -1)
 
 
-def avg_compressed_size(shape: torch.Size, config: Union[Config, BasicConfig]) -> float:
+def avg_compressed_size(
+    shape: torch.Size, config: Union[AdaptivePowerSGDConfig, PowerSGDConfig]
+) -> float:
     rank = min(config.rank, min(shape))
     return 0.5 * config.num_iters_per_step * rank * sum(shape)

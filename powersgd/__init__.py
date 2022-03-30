@@ -1,9 +1,10 @@
 import torch
-from .powersgd import AdaptivePowerSGD, Aggregator, Config
+from .powersgd import AdaptivePowerSGD, Aggregator, AdaptivePowerSGDConfig
 from .utils import params_in_optimizer
 
 
 PowerSGD = AdaptivePowerSGD
+Config = AdaptivePowerSGDConfig
 
 
 def optimizer_step(optimizer: torch.optim.Optimizer, aggregator: Aggregator):
