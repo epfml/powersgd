@@ -51,7 +51,7 @@ Research code for the experiments in the [PowerSGD paper](https://arxiv.org/abs/
 
 ## Selected follow-up work 
 - [(Ramesh et al., 2021 - DALL-E)](https://arxiv.org/abs/2102.12092) share valuable recommendations in using PowerSGD for large-scale transformer training.
-- (Please submit a PR if you want to be included in this list.)
+- (Please submit a PR if you want your work to be included in this list.)
 
 
 # Reference
