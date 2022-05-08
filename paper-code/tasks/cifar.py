@@ -33,9 +33,17 @@ class CifarTask:
 
         self._epoch = 0  # Counts how many times train_iterator was called
 
-        self.state = [parameter for parameter in self._model.parameters()]
-        self.buffers = [buffer for buffer in self._model.buffers()]
-        self.parameter_names = [name for (name, _) in self._model.named_parameters()]
+    @property
+    def state(self):
+        return [parameter for parameter in self._model.parameters()]
+    
+    @property
+    def buffers(self):
+        return [buffer for buffer in self._model.buffers()]
+    
+    @property
+    def parameter_names(self):
+        return [name for (name, _) in self._model.named_parameters()]
 
     def train_iterator(self, batch_size: int) -> Iterable[Batch]:
         """Create a dataloader serving `Batch`es from the training dataset.

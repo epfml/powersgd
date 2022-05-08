@@ -4,3 +4,5 @@ __pycache__
 ._*.html
 .AppleDouble/
 test*.py
+*.egg-info
+dist/

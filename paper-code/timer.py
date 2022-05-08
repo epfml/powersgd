@@ -36,20 +36,7 @@ class Timer:
         self.last_time = {}  # Last occurence of a label (end time)
         self.call_counts = {}  # Number of times a label occurred
 
-    @contextmanager
-    def __call__(self, label, epoch=-1.0, verbosity=1):
-        # Don't measure this if the verbosity level is too high
-        if verbosity > self.verbosity_level:
-            yield
-            return
-
-        # Measure the time
-        self._cuda_sync()
-        start = time.time_ns() * NS
-        yield
-        self._cuda_sync()
-        end = time.time_ns() * NS
-
+    def report(self, label, start, end):
         # Update first and last occurrence of this label
         if not label in self.first_time:
             self.first_time[label] = start
@@ -66,6 +53,23 @@ class Timer:
         else:
             self.totals[label] += end - start
             self.call_counts[label] += 1
+
+
+    @contextmanager
+    def __call__(self, label, epoch=-1.0, verbosity=1):
+        # Don't measure this if the verbosity level is too high
+        if verbosity > self.verbosity_level:
+            yield
+            return
+
+        # Measure the time
+        self._cuda_sync()
+        start = time.time_ns() * NS
+        yield
+        self._cuda_sync()
+        end = time.time_ns() * NS
+
+        self.report(label, start, end)
 
         if self.call_counts[label] > 0:
             # We will reduce the probability of logging a timing linearly with the number of times

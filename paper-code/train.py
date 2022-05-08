@@ -91,6 +91,15 @@ def main():
             rank=config["rank"],
         )
 
+    if torch.distributed.get_rank() == 0:
+        if config["task"] == "Cifar":
+            download_cifar()
+        elif config["task"] == "LSTM":
+            download_wikitext2()
+    torch.distributed.barrier()
+    torch.cuda.synchronize()
+
+
     task = tasks.build(task_name=config["task"], device=device, timer=timer, **config)
     reducer = get_reducer(device, timer)
 
@@ -468,6 +477,20 @@ def info(*args, **kwargs):
 def metric(*args, **kwargs):
     if config["rank"] == 0:
         log_metric(*args, **kwargs)
+
+def download_cifar(data_root=os.path.join(os.getenv("DATA"), "data")):
+    import torchvision
+
+    dataset = torchvision.datasets.CIFAR10
+    training_set = dataset(root=data_root, train=True, download=True)
+    test_set = dataset(root=data_root, train=False, download=True)
+
+def download_wikitext2(data_root=os.path.join(os.getenv("DATA"), "data")):
+    import torchtext
+
+    torchtext.datasets.WikiText2.splits(
+        torchtext.data.Field(lower=True), root=os.path.join(data_root, "wikitext2")
+    )
 
 
 def check_model_consistency_across_workers(model, epoch):
