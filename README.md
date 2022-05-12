@@ -52,6 +52,7 @@ Research code for the experiments in the [PowerSGD paper](https://arxiv.org/abs/
 ## Selected follow-up work 
 - [(Ramesh et al., 2021 - DALL-E)](https://arxiv.org/abs/2102.12092) share valuable recommendations in using PowerSGD for large-scale transformer training.
 - [(Agarwal et al., 2020)](https://arxiv.org/pdf/2010.16248.pdf) share insights into adaptive compression with PowerSGD.
+- [(Vogels et al., 2020)](https://arxiv.org/abs/2008.01425) adapt PowerSGD to work in a decentralized setting (with sparse connectivity between workers.)
 - [(Wang, 2021)](https://medium.com/pytorch/accelerating-pytorch-ddp-by-10x-with-powersgd-585aef12881d) introduces a variation to PowerSGD and describes his experience with PowerSGD on large language models.
 - (Please submit a PR if you want your work to be included here.)
 
