@@ -50,6 +50,7 @@ Because of the integration with DDP, the code is more involved than the code in 
 Research code for the experiments in the [PowerSGD paper](https://arxiv.org/abs/1905.13727) is located under [paper-code](./paper-code/README.md).
 
 ## Selected follow-up work 
+- [(Cho et al., 2019)](http://learningsys.org/neurips19/assets/papers/1_CameraReadySubmission_mlsys_grz_camera_ready.pdf) concurrently developed an algorithm that is fundamentally very similar to PowerSGD.
 - [(Ramesh et al., 2021 - DALL-E)](https://arxiv.org/abs/2102.12092) share valuable recommendations in using PowerSGD for large-scale transformer training.
 - [(Agarwal et al., 2020)](https://arxiv.org/pdf/2010.16248.pdf) share insights into adaptive compression with PowerSGD.
 - [(Vogels et al., 2020)](https://arxiv.org/abs/2008.01425) adapt PowerSGD to work in a decentralized setting (with sparse connectivity between workers.)
