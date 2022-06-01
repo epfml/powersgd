@@ -22,7 +22,7 @@ class Aggregator(ABC):
 class AllReduce(Aggregator):
     def aggregate(self, gradients: List[torch.Tensor]) -> List[torch.Tensor]:
         buffer, shapes = pack(gradients)
-        allreduce_average(gradients)
+        allreduce_average(buffer)
         out = unpack(buffer, shapes)
         for g in gradients:
             g.zero_()
