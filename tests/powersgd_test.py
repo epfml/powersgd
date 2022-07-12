@@ -1,16 +1,11 @@
-import pytest
 import torch
 import torchvision
 
 from powersgd import PowerSGD, Config
 
 
-@pytest.fixture
-def model():
-    return torchvision.models.resnet50(pretrained=True)
-
-
-def test_no_compression_in_the_beginning(model):
+def test_no_compression_in_the_beginning():
+    model = torchvision.models.resnet50()
     params = list(model.parameters())
     config = Config(
         rank=1,
@@ -32,9 +27,9 @@ def test_no_compression_in_the_beginning(model):
     assert powersgd.step_counter == 1
 
 
-def test_error_feedback_mechanism(model):
+def test_error_feedback_mechanism():
     torch.set_default_dtype(torch.float64)
-    model = torchvision.models.resnet50(pretrained=True)
+    model = torchvision.models.resnet50()
     params = list(model.parameters())
     config = Config(
         rank=2,
