@@ -21,6 +21,8 @@ class Aggregator(ABC):
 
 class AllReduce(Aggregator):
     def aggregate(self, gradients: List[torch.Tensor]) -> List[torch.Tensor]:
+        if len(gradients) == 0:
+            return []
         buffer, shapes = pack(gradients)
         allreduce_average(buffer)
         out = unpack(buffer, shapes)
@@ -171,17 +173,17 @@ class BasicPowerSGD(Aggregator):
             # Alternate between left and right matrix multiplications
             iter_is_even = (self.step_counter * num_iters_per_step + it) % 2 == 0
             if iter_is_even:
-                maybe_transpose = lambda g: g.permute([0, 2, 1])
+                maybe_transpose = lambda g: g
                 out_batches, in_batches = self._qs, self._ps
                 out_buffer = self._qs_buffer
             else:
-                maybe_transpose = lambda g: g
+                maybe_transpose = lambda g: g.permute([0, 2, 1])
                 out_batches, in_batches = self._ps, self._qs
                 out_buffer = self._ps_buffer
 
             # Matrix multiplication
             for group, in_batch, out_batch in zip(
-                shape_groups, out_batches, in_batches
+                shape_groups, in_batches, out_batches
             ):
                 orthogonalize(in_batch)
                 out_batch[:] = torch.einsum(
@@ -195,9 +197,9 @@ class BasicPowerSGD(Aggregator):
 
             # Construct low-rank reconstruction and update the approximation and error buffer
             for group, in_batch, out_batch in zip(
-                shape_groups, out_batches, in_batches
+                shape_groups, in_batches, out_batches
             ):
-                iter_approx = torch.einsum("bnr, bmr -> bmn", out_batch, in_batch)
+                iter_approx = torch.einsum("bnr, bmr -> bnm", in_batch, out_batch)
                 maybe_transpose(group["grad_batch"]).sub_(iter_approx)  # error feedback
                 maybe_transpose(group["approximation"]).add_(iter_approx)
                 del iter_approx
