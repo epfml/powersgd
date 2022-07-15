@@ -1,8 +1,8 @@
 import torch
 
 
-def orthogonalize(matrix: torch.Tensor, eps=1e-16):
+def orthogonalize(matrix: torch.Tensor, eps=torch.tensor(1e-16)):
     if matrix.shape[-1] == 1:
-        matrix[:] /= max(matrix.norm(), eps)
+        matrix.div_(torch.maximum(matrix.norm(), eps))
     else:
-        matrix[:] = torch.linalg.qr(matrix).Q
+        matrix.copy_(torch.linalg.qr(matrix).Q)

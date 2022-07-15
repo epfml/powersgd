@@ -5,7 +5,7 @@ from typing import Dict, List, NamedTuple, Union
 import torch
 
 from powersgd.orthogonalization import orthogonalize
-from powersgd.utils import allreduce_average, pack, unpack
+from powersgd.utils import allreduce_average, pack, unpack, is_distributed
 
 
 class Aggregator(ABC):
@@ -177,7 +177,7 @@ class BasicPowerSGD(Aggregator):
                 out_batches, in_batches = self._qs, self._ps
                 out_buffer = self._qs_buffer
             else:
-                maybe_transpose = lambda g: g.permute([0, 2, 1])
+                maybe_transpose = batch_transpose
                 out_batches, in_batches = self._ps, self._qs
                 out_buffer = self._ps_buffer
 
@@ -186,23 +186,37 @@ class BasicPowerSGD(Aggregator):
                 shape_groups, in_batches, out_batches
             ):
                 orthogonalize(in_batch)
-                out_batch[:] = torch.einsum(
-                    "bmn, bmr -> bnr",
-                    maybe_transpose(group["grad_batch"]),
-                    in_batch,
+                torch.bmm(
+                    batch_transpose(maybe_transpose(group["grad_batch"])), 
+                    in_batch, 
+                    out=out_batch
+                )
+
+            for group, in_batch, out_batch in zip(
+                shape_groups, in_batches, out_batches
+            ):
+                maybe_transpose(group["grad_batch"]).baddbmm_(
+                    in_batch, 
+                    batch_transpose(out_batch), 
+                    alpha=-1
                 )
 
             # Average across workers
-            allreduce_average(out_buffer)
+            if is_distributed():
+                num_workers = torch.distributed.get_world_size()
+                torch.distributed.all_reduce(out_buffer)
+            else:
+                num_workers = 1
 
             # Construct low-rank reconstruction and update the approximation and error buffer
             for group, in_batch, out_batch in zip(
                 shape_groups, in_batches, out_batches
             ):
-                iter_approx = torch.einsum("bnr, bmr -> bnm", in_batch, out_batch)
-                maybe_transpose(group["grad_batch"]).sub_(iter_approx)  # error feedback
-                maybe_transpose(group["approximation"]).add_(iter_approx)
-                del iter_approx
+                maybe_transpose(group["approximation"]).baddbmm_(
+                    in_batch, 
+                    batch_transpose(out_batch),
+                    alpha=1/num_workers
+                )
 
         # Un-batch the approximation and error feedback, write to the output
         for group in shape_groups:
@@ -212,8 +226,8 @@ class BasicPowerSGD(Aggregator):
                 group["approximation"],
                 group["grad_batch"],
             ):
-                o[:] = approx
-                m[:] = mb
+                o.copy_(approx)
+                m.copy_(mb)
 
         # Increment the step counter
         self.step_counter += 1
@@ -259,6 +273,11 @@ class BasicPowerSGD(Aggregator):
     @property
     def compression_rate(self) -> float:
         return self.uncompressed_num_floats / self.compressed_num_floats
+
+
+
+def batch_transpose(batch_of_matrices):
+    return batch_of_matrices.permute([0, 2, 1])
 
 
 def view_as_matrix(tensor: torch.Tensor):
