@@ -13,6 +13,7 @@ def optimizer_step(optimizer: torch.optim.Optimizer, aggregator: Aggregator):
     avg_grads = aggregator.aggregate()
 
     # Temporarily set parameter's gradients to the aggregated values
+    orig_grads = [p.grad.data for p in params]
     for (p, g) in zip(params, avg_grads):
         p.grad = g
 
@@ -20,5 +21,5 @@ def optimizer_step(optimizer: torch.optim.Optimizer, aggregator: Aggregator):
     optimizer.step()
 
     # Put back the error buffer as the parameter's gradient
-    for (p, g) in zip(params, grads):
+    for (p, g) in zip(params, orig_grads):
         p.grad = g
