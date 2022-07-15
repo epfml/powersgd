@@ -32,6 +32,7 @@ Usage:
 +     min_compression_rate=10,  # don't compress gradients with less compression
 +     num_iters_per_step=2,  #   # lower number => more aggressive compression
 +     start_compressing_after_num_steps=0,
++     use_cuda_graph=True,
 + ))
 
   for each batch:
