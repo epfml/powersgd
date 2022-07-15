@@ -1,6 +1,7 @@
-from typing import List, Tuple
-import torch
 from types import SimpleNamespace
+from typing import Iterator, List, NamedTuple, Tuple
+
+import torch
 
 
 def pack(tensors: List[torch.Tensor]) -> Tuple[torch.Tensor, List[torch.Size]]:
@@ -20,6 +21,35 @@ def unpack(buffer: torch.Tensor, shapes: List[torch.Size]) -> List[torch.Tensor]
         idx = end
 
     return entries
+
+
+def batch_unpack(
+    batch_of_buffers: torch.Tensor, shapes: List[torch.Size]
+) -> List[torch.Tensor]:
+    """Same as unpack, but given a batch of buffers of the same type, it produces batches of tensors"""
+    idx = 0
+    entries = []
+    batch_size = len(batch_of_buffers)
+    for tensor_shape in shapes:
+        end = idx + tensor_shape.numel()
+        entries.append(batch_of_buffers[:, idx:end].view(batch_size, *tensor_shape))
+        idx = end
+
+    return entries
+
+
+class ContiguousAllocation(NamedTuple):
+    buffer: torch.Tensor
+    shapes: list[torch.Size]
+    tensors: list[torch.Tensor]
+
+
+def allocate_contiguous(
+    shapes: list[torch.Size], device: torch.device, dtype: torch.dtype
+) -> ContiguousAllocation:
+    numel = sum(s.numel() for s in shapes)
+    buffer = torch.empty(numel, dtype=dtype, device=device)
+    return ContiguousAllocation(buffer, shapes, unpack(buffer, shapes))
 
 
 def params_in_optimizer(optimizer: torch.optim.Optimizer) -> List[torch.Tensor]:

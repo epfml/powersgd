@@ -14,12 +14,14 @@ def test_no_compression_in_the_beginning():
         num_iters_per_step=1,
     )
     powersgd = PowerSGD(list(params), config=config)
-    gradients = [torch.randn_like(p) for p in params]
-    grad_orig = [g.clone() for g in gradients]
-    avg_grad = powersgd.aggregate(gradients)
+    for p in params:
+        p.grad = torch.randn_like(p)
+    grad_orig = [p.grad.clone() for p in params]
+    avg_grad = powersgd.aggregate()
 
-    for grad in gradients:
-        assert grad.allclose(torch.zeros_like(grad))
+    for p in params:
+        assert p.grad is not None
+        assert p.grad.allclose(torch.zeros_like(p.grad))
 
     for (grad, orig) in zip(avg_grad, grad_orig):
         assert grad.allclose(orig)
@@ -39,13 +41,14 @@ def test_error_feedback_mechanism():
     )
     powersgd = PowerSGD(list(params), config=config)
 
-    gradients = [torch.randn_like(p) for p in params]
+    for p in params:
+        p.grad = torch.randn_like(p)
 
-    grad_orig = [g.clone() for g in gradients]
-    avg_grad = powersgd.aggregate(gradients)
+    grad_orig = [p.grad.clone() for p in params]
+    avg_grad = powersgd.aggregate()
 
-    for orig, avg, buffer in zip(grad_orig, avg_grad, gradients):
-        assert orig.allclose(avg + buffer)
+    for orig, avg, p in zip(grad_orig, avg_grad, params):
+        assert orig.allclose(avg + p.grad)
 
 
 if __name__ == "__main__":
