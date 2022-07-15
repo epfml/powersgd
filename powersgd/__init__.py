@@ -10,8 +10,7 @@ def optimizer_step(optimizer: torch.optim.Optimizer, aggregator: Aggregator):
     and then take an optimizer step using the aggregated gradient.
     """
     params = params_in_optimizer(optimizer)
-    grads = [p.grad.data for p in params]  # type: ignore
-    avg_grads = aggregator.aggregate(grads)  # subtracts the approximation from grads
+    avg_grads = aggregator.aggregate()
 
     # Temporarily set parameter's gradients to the aggregated values
     for (p, g) in zip(params, avg_grads):
