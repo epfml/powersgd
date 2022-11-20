@@ -25,7 +25,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install PyTorch
-        run: pip install torch torchvision pillow --extra-index-url https://download.pytorch.org/whl/cpu
+        run: pip install torch torchvision pillow==6.1 --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Build and install
         run: pip install --verbose .[test]
