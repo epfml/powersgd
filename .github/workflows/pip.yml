@@ -24,6 +24,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install PyTorch
+        run: pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+
       - name: Build and install
         run: pip install --verbose .[test]
 
