@@ -1,11 +1,18 @@
 import torch
-import torchvision
 
 from powersgd import PowerSGD, Config
 
+def build_model():
+    return torch.nn.Sequential(
+        torch.nn.Conv2d(3, 100, 3),
+        torch.nn.ReLU(),
+        torch.nn.Conv2d(100, 50, 5),
+        torch.nn.Linear(50, 1)
+    )
+
 
 def test_no_compression_in_the_beginning():
-    model = torchvision.models.resnet50()
+    model = build_model()
     params = list(model.parameters())
     config = Config(
         rank=1,
@@ -29,7 +36,7 @@ def test_no_compression_in_the_beginning():
 
 def test_error_feedback_mechanism():
     torch.set_default_dtype(torch.float64)
-    model = torchvision.models.resnet50()
+    model = build_model()
     params = list(model.parameters())
     config = Config(
         rank=2,
