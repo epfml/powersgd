@@ -47,9 +47,9 @@ Usage:
 The version in this code base is a slight improvement over the version in the PowerSGD paper.
 It looks a bit like Algorithm 2 in [this follow-up paper](https://arxiv.org/pdf/2008.01425.pdf).
 
-We found that there are two ways to control the approximation quality in PowerSGD: the first is the 'rank' of the approximation, and the second is the 'number of iterations'. Because the cost of orthogonalisation grows as $O(\text{rank}^2)$, increasing the rank can become inefficient, leaving changing the number of iterations as the best option.
+We found that there are two ways to control the approximation quality in PowerSGD: the first is the 'rank' of the approximation, and the second is the 'number of powerSGD iterations' in between gradient steps, while keeping the rank 1. Because the cost of orthogonalisation grows as $O(\text{rank}^2)$, increasing the rank can become inefficient, leaving changing the number of iterations as the best option.
 
-In the original PowerSGD paper, more iterations only improves the quality of the rank-k approximation, as the approximation converges to the "best rank k approximation". In the [follow-up paper](https://arxiv.org/pdf/2008.01425.pdf), intermediate results from these power iterations are all used, effectively increasing the rank as the number of iterations grows.
+In the original PowerSGD paper, more iterations only improves the quality of the rank-k approximation, as the approximation converges to the "best rank k approximation". In the [follow-up paper](https://arxiv.org/pdf/2008.01425.pdf), intermediate results from these rank 1 power iterations are all used and communicated, effectively increasing the rank as the number of iterations grows.
 
 In the original PowerSGD paper, we used two iterations per SGD step (a left and a right iteration). In this setting, there is not much of a difference. The difference appears when you use more power iteration steps per SGD step.
 
