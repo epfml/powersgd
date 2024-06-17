@@ -68,6 +68,7 @@ Research code for the experiments in the [PowerSGD paper](https://arxiv.org/abs/
 - [(Agarwal et al., 2020)](https://arxiv.org/pdf/2010.16248.pdf) share insights into adaptive compression with PowerSGD.
 - [(Vogels et al., 2020)](https://arxiv.org/abs/2008.01425) adapt PowerSGD to work in a decentralized setting (with sparse connectivity between workers.)
 - [(Wang, 2021)](https://medium.com/pytorch/accelerating-pytorch-ddp-by-10x-with-powersgd-585aef12881d) introduces a variation to PowerSGD and describes his experience with PowerSGD on large language models.
+- [(Song et al., 2023)](https://arxiv.org/abs/2301.09830) utilizes PowerSGD (and its slight variant) to compressing pipeline-/data-parallelism gradients in 3D parallelism-based LLM training.
 - (Please submit a PR if you want your work to be included here.)
 
 
