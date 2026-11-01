@@ -1,12 +1,11 @@
+import math
 import os
+from collections import Counter
 from copy import deepcopy
+from types import SimpleNamespace
 from typing import Dict, Iterable, List
 
-import spacy
 import torch
-import torchtext
-from spacy.symbols import ORTH
-from torch.utils.data import DataLoader
 
 from mean_accumulator import MeanAccumulator
 
@@ -236,42 +235,62 @@ def define_dataset(
     reshuffle_per_epoch=True,
     rnn_bptt_len=30,
 ):
-    # create dataset.
-    TEXT, train, valid, test = _get_dataset(dataset_name, dataset_path)
+    # Replaces the torchtext.legacy Field/BPTTIterator pipeline (removed from torchtext)
+    # with an equivalent one: lowercased whitespace tokens, <eos> per line, BPTT batches.
+    assert not rnn_use_pretrained_emb, "Pretrained embeddings are not supported"
+    train, valid, test = _get_dataset(dataset_name, dataset_path)
 
     n_workers = torch.distributed.get_world_size() if torch.distributed.is_available() else 1
 
-    # Build vocb.
-    # we can use some precomputed word embeddings,
-    # e.g., GloVe vectors with 100, 200, and 300.
-    if rnn_use_pretrained_emb:
-        try:
-            vectors = "glove.6B.{}d".format(rnn_n_hidden)
-            vectors_cache = os.path.join(dataset_path, ".vector_cache")
-        except:
-            vectors, vectors_cache = None, None
-    else:
-        vectors, vectors_cache = None, None
-    TEXT.build_vocab(train, vectors=vectors, vectors_cache=vectors_cache)
+    TEXT = SimpleNamespace(vocab=Vocab(train))
 
-    # Partition training data.
-    train_loader, _ = torchtext.data.BPTTIterator.splits(
-        (train, valid),
-        batch_size=batch_size * n_workers,
-        bptt_len=rnn_bptt_len,
-        device=device,
-        shuffle=reshuffle_per_epoch,
+    train_loader = BPTTIterator(
+        TEXT.vocab.numericalize(train), batch_size * n_workers, rnn_bptt_len, device
     )
-    _, val_loader = torchtext.data.BPTTIterator.splits(
-        (train, valid),
-        batch_size=batch_size * n_workers,
-        bptt_len=rnn_bptt_len,
-        device=device,
-        shuffle=reshuffle_per_epoch,
+    val_loader = BPTTIterator(
+        TEXT.vocab.numericalize(valid), batch_size * n_workers, rnn_bptt_len, device
     )
 
-    # get some stat.
     return TEXT, train_loader, val_loader
+
+
+class Vocab:
+    """Same layout as torchtext's legacy vocab: <unk>, <pad>, then tokens by frequency."""
+
+    def __init__(self, tokens: List[str], specials=("<unk>", "<pad>")):
+        counts = Counter(tokens)
+        for special in specials:
+            counts.pop(special, None)
+        words = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        self.itos = list(specials) + [word for word, _ in words]
+        self.stoi = {word: i for i, word in enumerate(self.itos)}
+        self.vectors = None
+
+    def __len__(self):
+        return len(self.itos)
+
+    def numericalize(self, tokens: List[str]) -> torch.Tensor:
+        unk = self.stoi["<unk>"]
+        return torch.tensor([self.stoi.get(token, unk) for token in tokens], dtype=torch.long)
+
+
+class BPTTIterator:
+    """Yields batches with `.text` and `.target` of shape [bptt_len, batch_size]."""
+
+    def __init__(self, data: torch.Tensor, batch_size: int, bptt_len: int, device):
+        n_rows = data.numel() // batch_size
+        self.data = data[: n_rows * batch_size].view(batch_size, n_rows).t().contiguous().to(device)
+        self.bptt_len = bptt_len
+
+    def __len__(self):
+        return math.ceil((len(self.data) - 1) / self.bptt_len)
+
+    def __iter__(self):
+        for i in range(0, len(self.data) - 1, self.bptt_len):
+            seq_len = min(self.bptt_len, len(self.data) - 1 - i)
+            yield SimpleNamespace(
+                text=self.data[i : i + seq_len], target=self.data[i + 1 : i + 1 + seq_len]
+            )
 
 
 def define_model(TEXT, rnn_n_hidden=650, rnn_n_layers=3, rnn_tie_weights=True, drop_rate=0.4):
@@ -301,25 +320,24 @@ def define_model(TEXT, rnn_n_hidden=650, rnn_n_layers=3, rnn_tie_weights=True, d
     return model
 
 
-def _get_text():
-    spacy_en = spacy.load("en")
-    spacy_en.tokenizer.add_special_case("<eos>", [{ORTH: "<eos>"}])
-    spacy_en.tokenizer.add_special_case("<bos>", [{ORTH: "<bos>"}])
-    spacy_en.tokenizer.add_special_case("<unk>", [{ORTH: "<unk>"}])
-
-    def spacy_tok(text):
-        return [tok.text for tok in spacy_en.tokenizer(text)]
-
-    TEXT = torchtext.data.Field(lower=True, tokenize=spacy_tok)
-    return TEXT
+def _read_tokens(path):
+    tokens = []
+    with open(path, encoding="utf-8") as fp:
+        for line in fp:
+            tokens.extend(line.lower().split() + ["<eos>"])
+    return tokens
 
 
 def _get_dataset(name, datasets_path):
-    TEXT = _get_text()
-
-    # Load and split data.
-    if "wikitext2" in name:
-        train, valid, test = torchtext.datasets.WikiText2.splits(TEXT, root=datasets_path)
-    elif "ptb" in name:
-        train, valid, test = torchtext.datasets.PennTreebank.splits(TEXT, root=datasets_path)
-    return TEXT, train, valid, test
+    if "wikitext2" not in name:
+        raise ValueError(f"Unsupported dataset {name}")
+    directory = os.path.join(datasets_path, "wikitext-2")
+    if not os.path.isdir(directory):
+        raise FileNotFoundError(
+            f"{directory} not found. Download https://wikitext.smerity.com/wikitext-2-v1.zip "
+            f"and unzip it into {datasets_path}."
+        )
+    return tuple(
+        _read_tokens(os.path.join(directory, f"wiki.{split}.tokens"))
+        for split in ("train", "valid", "test")
+    )

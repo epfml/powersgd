@@ -59,8 +59,10 @@ config = dict(
     task_architecture="ResNet18",
     seed=42,
     rank=0,
+    local_rank=0,  # GPU index on this node
     n_workers=1,
     distributed_init_file=None,
+    distributed_init_method=None,  # e.g. "env://"; overrides distributed_init_file
     log_verbosity=2,
 )
 
@@ -71,22 +73,29 @@ def main():
     torch.manual_seed(config["seed"] + config["rank"])
     np.random.seed(config["seed"] + config["rank"])
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda", config["local_rank"])
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device("cpu")
 
     timer = Timer(verbosity_level=config["log_verbosity"], log_fn=metric)
 
     if torch.distributed.is_available():
-        if config["distributed_init_file"] is None:
-            config["distributed_init_file"] = os.path.join(output_dir, "dist_init")
+        init_method = config["distributed_init_method"]
+        if init_method is None:
+            if config["distributed_init_file"] is None:
+                config["distributed_init_file"] = os.path.join(output_dir, "dist_init")
+            init_method = "file://" + os.path.abspath(config["distributed_init_file"])
         print(
             "Distributed init: rank {}/{} - {}".format(
-                config["rank"], config["n_workers"], config["distributed_init_file"]
+                config["rank"], config["n_workers"], init_method
             )
         )
         torch.distributed.init_process_group(
             backend=config["distributed_backend"],
-            init_method="file://" + os.path.abspath(config["distributed_init_file"]),
-            timeout=datetime.timedelta(seconds=120),
+            init_method=init_method,
+            timeout=datetime.timedelta(seconds=600),
             world_size=config["n_workers"],
             rank=config["rank"],
         )
@@ -94,10 +103,11 @@ def main():
     if torch.distributed.get_rank() == 0:
         if config["task"] == "Cifar":
             download_cifar()
-        elif config["task"] == "LSTM":
+        elif config["task"] == "LanguageModeling":
             download_wikitext2()
     torch.distributed.barrier()
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
 
 
     task = tasks.build(task_name=config["task"], device=device, timer=timer, **config)
@@ -478,19 +488,32 @@ def metric(*args, **kwargs):
     if config["rank"] == 0:
         log_metric(*args, **kwargs)
 
-def download_cifar(data_root=os.path.join(os.getenv("DATA"), "data")):
+def download_cifar(data_root=None):
     import torchvision
 
+    data_root = data_root or os.path.join(os.environ["DATA"], "data")
     dataset = torchvision.datasets.CIFAR10
     training_set = dataset(root=data_root, train=True, download=True)
     test_set = dataset(root=data_root, train=False, download=True)
 
-def download_wikitext2(data_root=os.path.join(os.getenv("DATA"), "data")):
-    import torchtext
 
-    torchtext.datasets.WikiText2.splits(
-        torchtext.data.Field(lower=True), root=os.path.join(data_root, "wikitext2")
+def download_wikitext2(data_root=None):
+    import urllib.request
+    import zipfile
+
+    root = os.path.join(data_root or os.path.join(os.environ["DATA"], "data"), "wikitext2")
+    if os.path.isdir(os.path.join(root, "wikitext-2")):
+        return
+    os.makedirs(root, exist_ok=True)
+    zip_path = os.path.join(root, "wikitext-2-v1.zip")
+    # The server answers 403 to urllib's default User-Agent.
+    request = urllib.request.Request(
+        "https://wikitext.smerity.com/wikitext-2-v1.zip", headers={"User-Agent": "Mozilla/5.0"}
     )
+    with urllib.request.urlopen(request) as response, open(zip_path, "wb") as fp:
+        fp.write(response.read())
+    with zipfile.ZipFile(zip_path) as archive:
+        archive.extractall(root)
 
 
 def check_model_consistency_across_workers(model, epoch):

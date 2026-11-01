@@ -1,0 +1,66 @@
+{
+ "run_id": "gpt_ddp_2node",
+ "job": "60627319",
+ "validity": "valid (split)",
+ "final_snapshot": "results_batch",
+ "split_from_shared_file": true,
+ "step_times_from": null,
+ "runs_jsonl_record": {
+  "run_id": "gpt_ddp_2node",
+  "model": "nanogpt",
+  "dataset": "shakespeare_char",
+  "world_size": 8,
+  "nodes": 2,
+  "gpus_used": 8,
+  "rank_R": null,
+  "mode": "ddp",
+  "precision": "fp32",
+  "precision_note": null,
+  "seed": 1,
+  "batch_size_per_gpu": 64,
+  "global_batch": 512,
+  "steps": 2000,
+  "planned_steps": 2000,
+  "epochs": null,
+  "start_powerSGD_iter": null,
+  "final_metric": {
+   "val_loss": 2.662103545665741,
+   "val_ppl": 14.326393647693296
+  },
+  "best_metric": {
+   "val_loss": 1.4885386943817138,
+   "val_ppl": 4.430616301604251
+  },
+  "wall_time_s": 170.32674501600195,
+  "train_time_s": 162.18504713796938,
+  "median_step_time_s": 0.07977273749929736,
+  "mean_step_time_s": 0.07982608106412954,
+  "throughput_per_s": 1641969.6201132715,
+  "throughput_unit": "tokens/s",
+  "comm_bytes_per_step": 43183104.0,
+  "comm_bytes_note": "logical payload per rank passed to dist.all_reduce, steady state; not wire bytes",
+  "status": "ok",
+  "run_dir": "/pscratch/sd/a/arc369/powersgd/results/runs/gpt_ddp_2node",
+  "params": 10795776,
+  "torch": "2.13.0+cu130",
+  "git_commit": "7b066e3",
+  "timestamp": "2026-10-31T13:38:09-0700",
+  "slurm_job_id": "60627319",
+  "slurm_account": "m4431_g",
+  "slurm_qos": "gpu_interactive",
+  "slurm_nodelist": "nid[001333,200448]",
+  "host": "nid001333",
+  "gpu_hours": 0.37850387781333766
+ },
+ "notes": [
+  "config.json `rank` is a CLI default for ddp, not a PowerSGD rank",
+  "split from a shared metrics.jsonl (block 1 of 2); config.json is identical for both runs",
+  "attributed to job 60627319: final val 2.6621 equals the runs.jsonl record of job 60627319",
+  "step_times.csv NOT recoverable (the other job overwrote it)"
+ ],
+ "raw_file_md5": {
+  "config.json": "e30f4579f1e691e1539a9e0b63aa213e",
+  "metrics.jsonl": "5f8ba232ea0f8496b5da8cd2e2f50ea5",
+  "step_times.csv": "2545060ddaa14460c18c9a4b2d744ba5"
+ }
+}

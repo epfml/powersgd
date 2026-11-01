@@ -1,0 +1,65 @@
+{
+ "run_id": "gpt_r4_2node",
+ "job": "60623329",
+ "validity": "valid (split)",
+ "final_snapshot": "results_batch",
+ "split_from_shared_file": true,
+ "step_times_from": "results_batch",
+ "runs_jsonl_record": {
+  "run_id": "gpt_r4_2node",
+  "model": "nanogpt",
+  "dataset": "shakespeare_char",
+  "world_size": 8,
+  "nodes": 2,
+  "gpus_used": 8,
+  "rank_R": 4,
+  "mode": "powersgd",
+  "precision": "fp32",
+  "precision_note": null,
+  "seed": 1,
+  "batch_size_per_gpu": 64,
+  "global_batch": 512,
+  "steps": 2000,
+  "planned_steps": 2000,
+  "epochs": null,
+  "start_powerSGD_iter": 10,
+  "final_metric": {
+   "val_loss": 1.4940785586833953,
+   "val_ppl": 4.455229428431049
+  },
+  "best_metric": {
+   "val_loss": 1.4940785586833953,
+   "val_ppl": 4.455229428431049
+  },
+  "wall_time_s": 190.33838008899693,
+  "train_time_s": 182.17388126000515,
+  "median_step_time_s": 0.08961310700033209,
+  "mean_step_time_s": 0.08968821174137775,
+  "throughput_per_s": 1461418.3676440702,
+  "throughput_unit": "tokens/s",
+  "comm_bytes_per_step": 737312.0,
+  "comm_bytes_note": "logical payload per rank passed to dist.all_reduce, steady state; not wire bytes",
+  "status": "ok",
+  "run_dir": "/pscratch/sd/a/arc369/powersgd/results/runs/gpt_r4_2node",
+  "params": 10795776,
+  "torch": "2.13.0+cu130",
+  "git_commit": "7b066e3",
+  "timestamp": "2026-10-31T13:55:30-0700",
+  "slurm_job_id": "60623329",
+  "slurm_account": "m4431_g",
+  "slurm_qos": "gpu_regular",
+  "slurm_nodelist": "nid[002821,008660]",
+  "host": "nid002821",
+  "gpu_hours": 0.4229741779755487
+ },
+ "notes": [
+  "split from a shared metrics.jsonl (block 2 of 2); config.json is identical for both runs",
+  "attributed to job 60623329: final val 1.4941 equals the runs.jsonl record of job 60623329; all 8 (val_loss, train_loss) pairs identical to the eval lines in gpt_2n_60623329.out",
+  "step_times.csv taken from snapshot `results_batch` (its median step time equals this block's `done` line)"
+ ],
+ "raw_file_md5": {
+  "config.json": "05d56a8afec3ddbcdae7e1134646b99d",
+  "metrics.jsonl": "094a156a4095c97483b69bd884754c77",
+  "step_times.csv": "3ca656db9532d480b9a15cfb3579cf98"
+ }
+}

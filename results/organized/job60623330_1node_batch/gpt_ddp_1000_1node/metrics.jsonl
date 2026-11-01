@@ -1,0 +1,4 @@
+{"type": "start", "run_id": "gpt_ddp_1000_1node", "params": 10795776, "world_size": 4, "total_steps": 1000, "lr_eff": 0.001, "global_batch": 256, "device": "NVIDIA A100-SXM4-80GB", "torch": "2.13.0+cu130", "tf32_matmul": false, "tf32_cudnn": true}
+{"type": "eval", "step": 500, "epoch": null, "train_loss": 1.8833763537406922, "train_time_s": 39.956592586935585, "elapsed_s": 40.96202939200157, "median_step_s": 0.07803697849885793, "val_loss": 1.498628205060959, "val_ppl": 4.475545326894553}
+{"type": "eval", "step": 1000, "epoch": null, "train_loss": 1.1574425709247589, "train_time_s": 79.49176015392732, "elapsed_s": 81.52033818899872, "median_step_s": 0.07803393050016894, "val_loss": 1.4969878613948822, "val_ppl": 4.468209912410486}
+{"type": "done", "wall_time_s": 81.52101502699952, "median_step_time_s": 0.07803393050016894, "comm_bytes_per_step": 43183104.0, "status": "ok"}

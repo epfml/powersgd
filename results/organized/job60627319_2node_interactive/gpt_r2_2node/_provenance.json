@@ -1,0 +1,65 @@
+{
+ "run_id": "gpt_r2_2node",
+ "job": "60627319",
+ "validity": "valid (split)",
+ "final_snapshot": "results_batch",
+ "split_from_shared_file": true,
+ "step_times_from": "results_2node",
+ "runs_jsonl_record": {
+  "run_id": "gpt_r2_2node",
+  "model": "nanogpt",
+  "dataset": "shakespeare_char",
+  "world_size": 8,
+  "nodes": 2,
+  "gpus_used": 8,
+  "rank_R": 2,
+  "mode": "powersgd",
+  "precision": "fp32",
+  "precision_note": null,
+  "seed": 1,
+  "batch_size_per_gpu": 64,
+  "global_batch": 512,
+  "steps": 2000,
+  "planned_steps": 2000,
+  "epochs": null,
+  "start_powerSGD_iter": 10,
+  "final_metric": {
+   "val_loss": 1.755221751332283,
+   "val_ppl": 5.784730371405881
+  },
+  "best_metric": {
+   "val_loss": 1.755221751332283,
+   "val_ppl": 5.784730371405881
+  },
+  "wall_time_s": 181.09498781300135,
+  "train_time_s": 172.96065970204654,
+  "median_step_time_s": 0.08512677050021011,
+  "mean_step_time_s": 0.08527213657779419,
+  "throughput_per_s": 1537102.3321366222,
+  "throughput_unit": "tokens/s",
+  "comm_bytes_per_step": 430096.0,
+  "comm_bytes_note": "logical payload per rank passed to dist.all_reduce, steady state; not wire bytes",
+  "status": "ok",
+  "run_dir": "/pscratch/sd/a/arc369/powersgd/results/runs/gpt_r2_2node",
+  "params": 10795776,
+  "torch": "2.13.0+cu130",
+  "git_commit": "7b066e3",
+  "timestamp": "2026-10-31T13:42:16-0700",
+  "slurm_job_id": "60627319",
+  "slurm_account": "m4431_g",
+  "slurm_qos": "gpu_interactive",
+  "slurm_nodelist": "nid[001333,200448]",
+  "host": "nid001333",
+  "gpu_hours": 0.4024333062511141
+ },
+ "notes": [
+  "split from a shared metrics.jsonl (block 1 of 2); config.json is identical for both runs",
+  "attributed to job 60627319: final val 1.7552 equals the runs.jsonl record of job 60627319",
+  "step_times.csv taken from snapshot `results_2node` (its median step time equals this block's `done` line)"
+ ],
+ "raw_file_md5": {
+  "config.json": "c4ba3e001c9b27cf277b179b5939d933",
+  "metrics.jsonl": "bf7133ec36a218a4c7eaf5726a753d4f",
+  "step_times.csv": "8f31215bbf489d1d8d74d5c6de2838e0"
+ }
+}

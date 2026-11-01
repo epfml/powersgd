@@ -1,0 +1,9 @@
+{
+  "accounts": {
+    "m4431_g": {"allocation_node_hours": null}
+  },
+  "since": "2026-10-29",
+  "planned": [
+    {"name": "tier1 resnet18 1-node (ddp + R1/R2/R4), estimate TBD after smoke run", "account": "m4431_g", "node_hours": null}
+  ]
+}

@@ -1,0 +1,29 @@
+# GPU usage per job, from Slurm accounting on Perlmutter (TRESUsageInAve of the srun step).
+# gpuutil = average % of time a GPU kernel was running (NVML); gpumem = average GPU memory used.
+# Command:
+#   sacct -j $(seq -s, 60621044 60621070) -P -n --format=JobID,JobName%60,TRESUsageInAve%500
+# Only the srun step (.0) runs on the GPUs; the .batch step is the launcher and always reports 0.
+# lm16_lm_sgd_w16_nccl_s3 (60621061) has no GPU record for its srun step.
+cifar16_cifar_sgd_w16_nccl_s1            60621044.0      gres/gpumem=2624M  gres/gpuutil=43
+cifar16_cifar_sgd_w16_nccl_s2            60621045.0      gres/gpumem=2624M  gres/gpuutil=43
+cifar16_cifar_sgd_w16_nccl_s3            60621046.0      gres/gpumem=2624M  gres/gpuutil=48
+cifar16_cifar_rank-1_w16_nccl_s1         60621047.0      gres/gpumem=2548M  gres/gpuutil=45
+cifar16_cifar_rank-1_w16_nccl_s2         60621048.0      gres/gpumem=2548M  gres/gpuutil=44
+cifar16_cifar_rank-1_w16_nccl_s3         60621049.0      gres/gpumem=2548M  gres/gpuutil=45
+cifar16_cifar_rank-2_w16_nccl_s1         60621050.0      gres/gpumem=2548M  gres/gpuutil=46
+cifar16_cifar_rank-2_w16_nccl_s2         60621051.0      gres/gpumem=2548M  gres/gpuutil=46
+cifar16_cifar_rank-2_w16_nccl_s3         60621052.0      gres/gpumem=2548M  gres/gpuutil=46
+cifar16_cifar_rank-4_w16_nccl_s1         60621054.0      gres/gpumem=2548M  gres/gpuutil=46
+cifar16_cifar_rank-4_w16_nccl_s2         60621055.0      gres/gpumem=2548M  gres/gpuutil=48
+cifar16_cifar_rank-4_w16_nccl_s3         60621057.0      gres/gpumem=2548M  gres/gpuutil=48
+lm16_lm_sgd_w16_nccl_s1                  60621059.0      gres/gpumem=4218M  gres/gpuutil=96
+lm16_lm_sgd_w16_nccl_s2                  60621060.0      gres/gpumem=4218M  gres/gpuutil=96
+lm16_lm_rank-1_w16_nccl_s1               60621062.0      gres/gpumem=4142M  gres/gpuutil=96
+lm16_lm_rank-1_w16_nccl_s2               60621063.0      gres/gpumem=4142M  gres/gpuutil=96
+lm16_lm_rank-1_w16_nccl_s3               60621064.0      gres/gpumem=4142M  gres/gpuutil=96
+lm16_lm_rank-2_w16_nccl_s1               60621065.0      gres/gpumem=4218M  gres/gpuutil=96
+lm16_lm_rank-2_w16_nccl_s2               60621066.0      gres/gpumem=4218M  gres/gpuutil=96
+lm16_lm_rank-2_w16_nccl_s3               60621067.0      gres/gpumem=4218M  gres/gpuutil=96
+lm16_lm_rank-4_w16_nccl_s1               60621068.0      gres/gpumem=4142M  gres/gpuutil=95
+lm16_lm_rank-4_w16_nccl_s2               60621069.0      gres/gpumem=4142M  gres/gpuutil=95
+lm16_lm_rank-4_w16_nccl_s3               60621070.0      gres/gpumem=4142M  gres/gpuutil=95

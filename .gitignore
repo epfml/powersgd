@@ -6,3 +6,6 @@ __pycache__
 test*.py
 *.egg-info
 dist/
+# raw scp copies of Perlmutter results (organized copies live in results/organized/)
+powersgd_results/
+results/paper_reproduction/raw/

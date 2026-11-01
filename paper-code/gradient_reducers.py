@@ -10,7 +10,7 @@ import torch
 try:
     import bit2byte
 except ImportError:
-    pass
+    bit2byte = None
 
 
 class Reducer:
@@ -92,15 +92,12 @@ class SignAndNormReducer(Reducer):
                 for sign, out, norm in zip(
                     flatgrad, grad_out, their_norms
                 ):
-                    out.data.add_(
-                        norm / sign.nelement() / self.n_workers,
-                        sign,
-                    )
+                    out.data.add_(sign * (norm / sign.nelement() / self.n_workers))
 
         with self.timer("reduce.memory", verbosity=2):
             for tensor, mem, norm in zip(grad_in, memory_out, my_norms):
                 mem.data[:] = tensor
-                mem.data.add_(-norm / tensor.nelement(), tensor.sign())
+                mem.data.sub_(tensor.sign() * (norm / tensor.nelement()))
 
         return bits_communicated
 
@@ -642,7 +639,7 @@ class SVDReducer(Reducer):
             out.data[:] = 0.0
             for uu, ss, vv in zip(worker_u, worker_s, worker_v):
                 out.view(*matrix.shape).add_(
-                    1.0 / self.n_workers, torch.einsum("in, n, jn -> ij", uu, ss, vv)
+                    torch.einsum("in, n, jn -> ij", uu, ss, vv), alpha=1.0 / self.n_workers
                 )
 
             bits_communicated += n_bits(u) + n_bits(s) + n_bits(v)
@@ -1084,7 +1081,7 @@ class AtomoReducer(Reducer):
 
             for worker_tensors in all_workers_decoded_tensors:
                 for tensor, out in zip(worker_tensors, grad_out):
-                    out.add_(1/self.n_workers, tensor.view(*out.shape))
+                    out.add_(tensor.view(*out.shape), alpha=1 / self.n_workers)
 
         with self.timer("reduce.memory", verbosity=2):
             for mem in memory_out:
@@ -1270,3 +1267,32 @@ class SignCompressor:
     def uncompress(self, src_tensor, src_tensor_size):
         dst_tensor = self.unpacking(src_tensor, src_tensor_size)
         return dst_tensor
+
+
+class TorchSignCompressor:
+    """
+    Pure-PyTorch stand-in for the bit2byte extension: packs signs 8 per uint8 byte,
+    so the number of communicated bits is the same (1 bit per coordinate).
+    Zeros are sent as +1, matching the S in {-1, 1} of Algorithms 5 and 7 in the paper.
+    """
+
+    def compress(self, src_tensor):
+        src_size = src_tensor.size()
+        bits = src_tensor.reshape(-1) >= 0
+        padding = (-bits.numel()) % 8
+        if padding > 0:
+            bits = torch.cat([bits, bits.new_zeros(padding)])
+        shifts = torch.arange(8, device=src_tensor.device, dtype=torch.uint8)
+        packed = (bits.view(-1, 8).to(torch.uint8) << shifts).sum(dim=1, dtype=torch.uint8)
+        return packed, src_size
+
+    def uncompress(self, src_tensor, src_tensor_size):
+        shifts = torch.arange(8, device=src_tensor.device, dtype=torch.uint8)
+        bits = (src_tensor.unsqueeze(1) >> shifts) & 1
+        n = int(np.prod(src_tensor_size))
+        signs = bits.view(-1)[:n].to(torch.float32).mul_(2).sub_(1)
+        return signs.view(src_tensor_size)
+
+
+if bit2byte is None:
+    SignCompressor = TorchSignCompressor

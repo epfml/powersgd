@@ -1,0 +1,4 @@
+{"type": "start", "run_id": "smoke_gpt_ddp", "params": 10795776, "world_size": 4, "total_steps": 50, "lr_eff": 0.001, "global_batch": 256, "device": "NVIDIA A100-SXM4-80GB", "torch": "2.13.0+cu130", "tf32_matmul": false, "tf32_cudnn": true}
+{"type": "eval", "step": 25, "epoch": null, "train_loss": 3.757819662094116, "train_time_s": 2.482819607008423, "elapsed_s": 3.4734814090006694, "median_step_s": 0.07797560999824782, "val_loss": 2.9780078172683715, "val_ppl": 19.648633958913294}
+{"type": "eval", "step": 50, "epoch": null, "train_loss": 2.818518486022949, "train_time_s": 4.461787155010825, "elapsed_s": 6.477981390002242, "median_step_s": 0.07801524649948988, "val_loss": 2.7615138709545137, "val_ppl": 15.823779985807}
+{"type": "done", "wall_time_s": 6.478640670000459, "median_step_time_s": 0.07801524649948988, "comm_bytes_per_step": 43183104.0, "status": "ok"}

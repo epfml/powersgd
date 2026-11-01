@@ -1,0 +1,61 @@
+{
+ "run_id": "gpt_powersgd_r2_1node",
+ "job": "60622124",
+ "validity": "valid",
+ "final_snapshot": "results_batch",
+ "split_from_shared_file": false,
+ "step_times_from": "results_batch",
+ "runs_jsonl_record": {
+  "run_id": "gpt_powersgd_r2_1node",
+  "model": "nanogpt",
+  "dataset": "shakespeare_char",
+  "world_size": 4,
+  "nodes": 1,
+  "gpus_used": 4,
+  "rank_R": 2,
+  "mode": "powersgd",
+  "precision": "fp32",
+  "precision_note": null,
+  "seed": 1,
+  "batch_size_per_gpu": 64,
+  "global_batch": 256,
+  "steps": 2000,
+  "planned_steps": 2000,
+  "epochs": null,
+  "start_powerSGD_iter": 10,
+  "final_metric": {
+   "val_loss": 1.7665899276733399,
+   "val_ppl": 5.850867422916273
+  },
+  "best_metric": {
+   "val_loss": 1.7665899276733399,
+   "val_ppl": 5.850867422916273
+  },
+  "wall_time_s": 177.09416391899867,
+  "train_time_s": 169.10635032202117,
+  "median_step_time_s": 0.08331895249830268,
+  "mean_step_time_s": 0.08336959731008796,
+  "throughput_per_s": 786089.9190413861,
+  "throughput_unit": "tokens/s",
+  "comm_bytes_per_step": 430096.0,
+  "comm_bytes_note": "logical payload per rank passed to dist.all_reduce, steady state; not wire bytes",
+  "status": "ok",
+  "run_dir": "/pscratch/sd/a/arc369/powersgd/results/runs/gpt_powersgd_r2_1node",
+  "params": 10795776,
+  "torch": "2.13.0+cu130",
+  "git_commit": "7b066e3",
+  "timestamp": "2026-10-31T11:49:02-0700",
+  "slurm_job_id": "60622124",
+  "slurm_account": "m4431_g",
+  "slurm_qos": "gpu_interactive",
+  "slurm_nodelist": "nid200380",
+  "host": "nid200380",
+  "gpu_hours": 0.19677129324333187
+ },
+ "notes": [],
+ "raw_file_md5": {
+  "config.json": "6d9f613b4b95c68025e3f4676c955182",
+  "metrics.jsonl": "60dfcb36d0bcfff59dea25bea7829f1d",
+  "step_times.csv": "b65410abd04c61ea69f3ff3c8626eb4b"
+ }
+}
